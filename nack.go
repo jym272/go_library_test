@@ -38,7 +38,7 @@ func nackWithDelay(msg *amqp.Delivery, queueName string, delay time.Duration, ma
 	defer cancel()
 	err = channel.PublishWithContext(
 		ctx,
-		string(RequeueE),
+		string(RequeueExchange),
 		fmt.Sprintf("%s_routing_key", queueName),
 		false, // mandatory
 		false, // immediate

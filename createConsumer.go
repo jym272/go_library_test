@@ -34,7 +34,7 @@ func createConsumers(consumers []QueueConsumerProps) error {
 		}
 
 		// Set up requeue mechanism by creating a requeue exchange and binding requeue queue to it.
-		err = channel.ExchangeDeclare(string(RequeueE), "direct", true, false, false, false, nil)
+		err = channel.ExchangeDeclare(string(RequeueExchange), "direct", true, false, false, false, nil)
 		if err != nil {
 			return err
 		}
@@ -44,12 +44,14 @@ func createConsumers(consumers []QueueConsumerProps) error {
 		if err != nil {
 			return err
 		}
-		err = channel.QueueBind(requeueQueue, routingKey, string(RequeueE), false, nil)
+		err = channel.QueueBind(requeueQueue, routingKey, string(RequeueExchange), false, nil)
 		if err != nil {
 			return err
 		}
 
 		// Set the prefetch count to process only one message at a time to maintain order and control concurrency.
+		// TODO: is the same channel as the createHeaderConsumers channel, if for some reason the prefetch count is changed in one place, it will be changed in the other
+		// TODO: solution, create a new channel
 		err = channel.Qos(1, 0, false)
 		if err != nil {
 			return err

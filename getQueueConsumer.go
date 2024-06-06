@@ -15,8 +15,10 @@ type (
 )
 
 const (
-	RequeueE  Exchange = "requeue_exchange"
-	CommandsE Exchange = "commands_exchange"
+	RequeueExchange         Exchange = "requeue_exchange"
+	CommandsExchange        Exchange = "commands_exchange"
+	MatchingExchange        Exchange = "matching_exchange"
+	MatchingRequeueExchange Exchange = "matching_requeue_exchange"
 )
 
 const (
@@ -35,6 +37,6 @@ func getQueueName(microservice AvailableMicroservices) string {
 func getQueueConsumer(microservice AvailableMicroservices) QueueConsumerProps {
 	return QueueConsumerProps{
 		QueueName: getQueueName(microservice),
-		Exchange:  CommandsE,
+		Exchange:  CommandsExchange,
 	}
 }
