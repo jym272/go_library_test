@@ -5,7 +5,8 @@ import "fmt"
 type AvailableMicroservices string
 
 const (
-	Auth AvailableMicroservices = "auth"
+	Auth        AvailableMicroservices = "auth"
+	RoomCreator AvailableMicroservices = "room-creator"
 )
 
 type (

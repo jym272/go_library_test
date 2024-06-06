@@ -60,7 +60,7 @@ func prepare(url string) error {
 	return nil
 }
 
-func HealthCheck() error {
+func HealthCheck(microservice AvailableMicroservices) error {
 	if !isConnected {
 		return fmt.Errorf("rabbitmq is not connected")
 	}
@@ -78,7 +78,7 @@ func HealthCheck() error {
 		return err
 
 	}
-	_, err = channel.QueueDeclarePassive(getQueueName(Auth), true, false, false, false, nil)
+	_, err = channel.QueueDeclarePassive(getQueueName(microservice), true, false, false, false, nil)
 	if err != nil {
 		fmt.Println("queue error")
 		return err
