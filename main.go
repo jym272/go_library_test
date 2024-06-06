@@ -1,5 +1,5 @@
 package golang_library
 
-func hello_world() {
+func main() {
 	println("Ba dum, tss!")
 }
