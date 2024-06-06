@@ -1,6 +1,5 @@
-// main.go
-package main
+package golang_library
 
-func main() {
+func hello_world() {
 	println("Ba dum, tss!")
 }
