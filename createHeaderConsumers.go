@@ -2,6 +2,7 @@ package saga
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -52,15 +53,20 @@ func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
 		if err != nil {
 			return fmt.Errorf("failed to declare exchange %s: %w", ev, err)
 		}
-		err = channel.ExchangeBind(string(ev), "", string(MatchingExchange), false, amqp.Table{
+		headersArgs := amqp.Table{
 			"all-micro": "yes",
 			"x-match":   "all",
-		})
+		}
+		for k, v := range headerEvent {
+			headersArgs[k] = v
+		}
+		err = channel.ExchangeBind(string(ev), "", string(MatchingExchange), false, headersArgs)
 		if err != nil {
 			return fmt.Errorf("failed to bind exchange %s to %s: %w", ev, MatchingExchange, err)
 		}
 
 		requeueExchange := fmt.Sprintf("%s_requeue", ev)
+
 		err = channel.ExchangeDeclare(requeueExchange, "headers", true, false, false, false, nil)
 		if err != nil {
 			return fmt.Errorf("failed to declare requeue exchange %s: %w", requeueExchange, err)
@@ -70,8 +76,8 @@ func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
 			return fmt.Errorf("failed to bind requeue exchange %s to %s: %w", requeueExchange, MatchingRequeueExchange, err)
 		}
 
-		eventIncluded := containsEvent(events, ev)
-		headersArgs := amqp.Table{
+		eventIncluded := slices.Contains(events, ev)
+		headersArgs = amqp.Table{
 			"micro":   queueName,
 			"x-match": "all",
 		}
@@ -106,8 +112,6 @@ func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
 			}
 
 		} else {
-			// Bindings for excluded events
-
 			// Attempt to unbind the queue, ignoring errors if it's already unbound
 			err = channel.QueueUnbind(queueName, "", string(ev), headerEvent)
 			if err != nil {
@@ -117,8 +121,6 @@ func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
 			if err != nil {
 				return fmt.Errorf("failed to unbind requeue queue %s from exchange %s_requeue: %w", requeueQueue, ev, err)
 			}
-
-			// Attempt to delete the exchange, ignoring errors if it's not found or still in use
 			err = channel.ExchangeDelete(fmt.Sprintf("%s_%s", ev, queueName), false, false)
 			if err != nil {
 				return fmt.Errorf("failed to delete exchange %s_%s: %w", ev, queueName, err)

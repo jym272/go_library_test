@@ -33,7 +33,6 @@ func connectToEvents(url string, microservice AvailableMicroservices, events []M
 	if err != nil {
 		return nil, err
 	}
-	// `${microservice}_match_commands`
 	q := fmt.Sprintf("%s_match_commands", microservice)
 	e := NewEmitter()
 
@@ -43,7 +42,7 @@ func connectToEvents(url string, microservice AvailableMicroservices, events []M
 	}
 
 	go func() {
-		err := consume(e, q.QueueName)
+		err := consume(e, q)
 		if err != nil {
 			fmt.Println("Error consuming messages:", err)
 		}
