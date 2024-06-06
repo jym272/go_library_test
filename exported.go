@@ -1,5 +1,5 @@
 package golang_library
 
-func main() {
+func FooBass() {
 	println("Ba dum, tss!")
 }
