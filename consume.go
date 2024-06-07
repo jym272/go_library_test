@@ -32,10 +32,12 @@ func microserviceConsumeCallback(msg *amqp.Delivery, channel *amqp.Channel, e *E
 	}
 
 	responseChannel := &MicroserviceConsumeChannel{
-		channel:   channel,
-		msg:       msg,
-		queueName: queueName,
-		step:      currentStep,
+		step: currentStep,
+		ConsumeChannel: &ConsumeChannel{
+			channel:   channel,
+			msg:       msg,
+			queueName: queueName,
+		},
 	}
 
 	e.Emit(currentStep.Command, CommandHandler{
@@ -45,7 +47,40 @@ func microserviceConsumeCallback(msg *amqp.Delivery, channel *amqp.Channel, e *E
 	})
 }
 
-func consume(e *Emitter, queueName string) error {
+func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, e *Emitter, queueName string) {
+	if msg == nil {
+		fmt.Println("NO MSG AVAILABLE")
+		return
+	}
+
+	var currentStep SagaStep
+	err := json.Unmarshal(msg.Body, &currentStep)
+	if err != nil {
+		fmt.Println("ERROR PARSING MSG", err)
+		err := channel.Nack(msg.DeliveryTag, false, false)
+		if err != nil {
+			fmt.Println("Error negatively acknowledging message:", err)
+			return
+		}
+		return
+	}
+
+	responseChannel := &EventsConsumeChannel{
+		ConsumeChannel: &ConsumeChannel{
+			channel:   channel,
+			msg:       msg,
+			queueName: queueName,
+		},
+	}
+
+	e.Emit(currentStep.Command, CommandHandler{
+		Channel: responseChannel,
+		Payload: currentStep.PreviousPayload,
+		SagaID:  currentStep.SagaID,
+	})
+}
+
+func consume(e *Emitter, queueName string, cb func(*amqp.Delivery, *amqp.Channel, *Emitter, string)) error {
 	channel, err := getConsumeChannel()
 	if err != nil {
 		return err
@@ -65,7 +100,7 @@ func consume(e *Emitter, queueName string) error {
 	}
 
 	for msg := range channelQ {
-		microserviceConsumeCallback(&msg, channel, e, queueName)
+		cb(&msg, channel, e, queueName)
 	}
 
 	return nil

@@ -19,7 +19,7 @@ func ConnectToSagaCommandEmitter(url string, microservice AvailableMicroservices
 	}
 
 	go func() {
-		err := consume(e, q.QueueName)
+		err := consume(e, q.QueueName, microserviceConsumeCallback)
 		if err != nil {
 			fmt.Println("Error consuming messages:", err)
 		}
@@ -42,7 +42,7 @@ func connectToEvents(url string, microservice AvailableMicroservices, events []M
 	}
 
 	go func() {
-		err := consume(e, q)
+		err := consume(e, q, eventCallback)
 		if err != nil {
 			fmt.Println("Error consuming messages:", err)
 		}
