@@ -15,7 +15,7 @@ type CommandHandler struct {
 	SagaID  int                         `json:"sagaId"`
 }
 
-func microserviceConsumeCallback(msg *amqp.Delivery, channel *amqp.Channel, e *Emitter, queueName string) {
+func microserviceConsumeCallback(msg *amqp.Delivery, channel *amqp.Channel, e *Emitter[CommandHandler, SagaStepCommand], queueName string) {
 	if msg == nil {
 		fmt.Println("NO MSG AVAILABLE")
 		return
@@ -55,24 +55,6 @@ type EventPayload struct {
 	Payload   interface{} // This will hold the event-specific data
 }
 
-// Event-specific structs (define these for each event type)
-type TestImagePayload struct {
-	Image string `json:"image"`
-}
-
-type TestMintPayload struct {
-	Mint string `json:"mint"`
-}
-
-type SocialBlockChatPayload struct {
-	UserID        string `json:"userId"`
-	UserToBlockID string `json:"userToBlockId"`
-}
-
-type SocialNewUserPayload struct {
-	UserID string `json:"userId"`
-}
-
 // Helper function to create an EventPayload
 func NewEventPayload(eventType MicroserviceEvent, payload interface{}) *EventPayload {
 	return &EventPayload{
@@ -104,7 +86,7 @@ type MicroserviceConsumeEvents struct {
 }
 
 // eventCallback handles the consumption and processing of microservice events.
-func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, emitter Emitter[MicroserviceConsumeEvents], queueName string) { // Assuming you have an Emitter type for event broadcasting
+func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, emitter *Emitter[EventHandler, MicroserviceEvent], queueName string) { // Assuming you have an Emitter type for event broadcasting
 	if msg == nil {
 		fmt.Println("Message not available")
 		return
@@ -216,7 +198,7 @@ func eventCallback1(msg *amqp.Delivery, channel *amqp.Channel, e *Emitter, queue
 	})
 }
 
-func consume(e *Emitter, queueName string, cb func(*amqp.Delivery, *amqp.Channel, *Emitter, string)) error {
+func consume[T any, U comparable](e *Emitter[T, U], queueName string, cb func(*amqp.Delivery, *amqp.Channel, *Emitter[T, U], string)) error {
 	channel, err := getConsumeChannel()
 	if err != nil {
 		return err

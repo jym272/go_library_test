@@ -1,6 +1,9 @@
 package saga
 
 type MicroserviceEvent string
+type PayloadEvent interface {
+	Type() MicroserviceEvent // Discriminant method
+}
 
 const (
 	TestImageEvent MicroserviceEvent = "test.image"
@@ -12,8 +15,37 @@ const (
 	SocialUnblockChatEvent    MicroserviceEvent = "social.unblock_chat"
 )
 
-type PayloadEvent interface {
-	Type() MicroserviceEvent // Discriminant method
+type TestImagePayload struct {
+	Image string `json:"image"`
+}
+
+func (TestImagePayload) Type() MicroserviceEvent {
+	return TestImageEvent
+}
+
+type TestMintPayload struct {
+	Mint string `json:"mint"`
+}
+
+func (TestMintPayload) Type() MicroserviceEvent {
+	return TestMintEvent
+}
+
+type SocialBlockChatPayload struct {
+	UserID        string `json:"userId"`
+	UserToBlockID string `json:"userToBlockId"`
+}
+
+func (SocialBlockChatPayload) Type() MicroserviceEvent {
+	return SocialBlockChatEvent
+}
+
+type SocialNewUserPayload struct {
+	UserID string `json:"userId"`
+}
+
+func (SocialNewUserPayload) Type() MicroserviceEvent {
+	return SocialNewUserEvent
 }
 
 type SocialUnblockChatPayload struct {
