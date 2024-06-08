@@ -11,7 +11,7 @@ type CommandEmitterConf struct {
 
 func connectToSagaCommandEmitter(conf CommandEmitterConf) (*Emitter[CommandHandler, SagaStepCommand], error) {
 	q := getQueueConsumer(conf.microservice)
-	e := NewEmitter[CommandHandler, SagaStepCommand]()
+	e := newEmitter[CommandHandler, SagaStepCommand]()
 
 	err := createConsumers([]QueueConsumerProps{q})
 	if err != nil {
@@ -37,16 +37,16 @@ type EventsConf struct {
 
 func connectToEvents(conf EventsConf) (*Emitter[EventHandler, MicroserviceEvent], error) {
 
-	q := fmt.Sprintf("%s_match_commands", conf.microservice)
-	e := NewEmitter[EventHandler, MicroserviceEvent]()
+	queueName := fmt.Sprintf("%s_match_commands", conf.microservice)
+	e := newEmitter[EventHandler, MicroserviceEvent]()
 
-	err := createHeaderConsumers(q, conf.events)
+	err := createHeaderConsumers(queueName, conf.events)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating header consumers: %w", err)
 	}
 
 	go func() {
-		err := consume(e, q, eventCallback)
+		err = consume(e, queueName, eventCallback)
 		if err != nil {
 			fmt.Println("Error consuming messages:", err)
 		}

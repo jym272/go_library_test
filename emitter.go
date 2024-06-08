@@ -12,7 +12,7 @@ type Emitter[T any, U comparable] struct {
 	mu sync.Mutex
 }
 
-func NewEmitter[T any, U comparable]() *Emitter[T, U] {
+func newEmitter[T any, U comparable]() *Emitter[T, U] {
 	return &Emitter[T, U]{
 		events: make(map[U]chan T),
 	}
@@ -136,13 +136,13 @@ func Abs[T SignedInteger](x T) T {
 
 func foo() {
 	a := Abs(-42)
-	commandEmitter := NewEmitter[CommandHandler, SagaStepCommand]()
+	commandEmitter := newEmitter[CommandHandler, SagaStepCommand]()
 	commandEmitter.On(NewUserSetRolesToRoomsCommand, func(handler CommandHandler) {
 		payload := handler.Payload
 		fmt.Println(payload)
 	})
 
-	eventEmitter := NewEmitter[EventHandler, MicroserviceEvent]()
+	eventEmitter := newEmitter[EventHandler, MicroserviceEvent]()
 	eventEmitter.On(PaymentsNotifyClientEvent, func(handler EventHandler) {
 		payload := handler.Payload.(PaymentsNotifyClientPayload)
 		fmt.Println(payload)

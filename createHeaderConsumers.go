@@ -25,7 +25,6 @@ func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
 
 	requeueQueue := fmt.Sprintf("%s_matching_requeue", queueName)
 
-	// Declare exchanges and queues
 	for _, exchange := range []Exchange{MatchingExchange, MatchingRequeueExchange} {
 		err = channel.ExchangeDeclare(string(exchange), "headers", true, false, false, false, nil)
 		if err != nil {
@@ -76,7 +75,6 @@ func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
 			return fmt.Errorf("failed to bind requeue exchange %s to %s: %w", requeueExchange, MatchingRequeueExchange, err)
 		}
 
-		eventIncluded := slices.Contains(events, ev)
 		headersArgs = amqp.Table{
 			"micro":   queueName,
 			"x-match": "all",
@@ -84,7 +82,7 @@ func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
 		for k, v := range headerEvent {
 			headersArgs[k] = v
 		}
-		if eventIncluded {
+		if slices.Contains(events, ev) {
 			// Bindings for included events
 			err = channel.QueueBind(queueName, "", string(ev), false, headerEvent)
 			if err != nil {
