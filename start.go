@@ -84,28 +84,3 @@ func StartTransactional(config TransactionalConfig) (*Emitter[EventHandler, Micr
 
 	return eventEmitter, commandEmitter, nil
 }
-
-func Foo() {
-
-	eventEmitter, commandEmitter, err := StartTransactional(TransactionalConfig{
-		Url:          "amqp://guest:guest@localhost:5672/",
-		Microservice: Auth,
-		Events: []MicroserviceEvent{
-			SocialNewUserEvent,
-		},
-	})
-	if err != nil {
-		fmt.Println("Error starting transactional:", err)
-		return
-	}
-	eventEmitter.On(SocialNewUserEvent, func(handler EventHandler) {
-		payload := handler.Payload.(SocialNewUserPayload)
-		fmt.Println("SocialNewUserEvent received", payload)
-	})
-
-	commandEmitter.On(NewUserSetRolesToRoomsCommand, func(handler CommandHandler) {
-		payload := handler.Payload
-		fmt.Println("SocialNewUserEvent received", payload)
-	})
-
-}

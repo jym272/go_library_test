@@ -13,6 +13,12 @@ type (
 	Occurrence int
 )
 
+type ConsumeChannel struct {
+	channel   *amqp.Channel
+	msg       *amqp.Delivery
+	queueName string
+}
+
 type MicroserviceConsumeChannel struct {
 	*ConsumeChannel
 	step SagaStep
@@ -22,12 +28,11 @@ type EventsConsumeChannel struct {
 	*ConsumeChannel
 }
 
-func (m *EventsConsumeChannel) AckMessage() error {
+func (m *EventsConsumeChannel) AckMessage() {
 	err := m.channel.Ack(m.msg.DeliveryTag, false)
 	if err != nil {
-		return fmt.Errorf("error acknowledging message: %w", err)
+		fmt.Println("error acknowledging message: %w", err)
 	}
-	return nil
 }
 
 func (m *MicroserviceConsumeChannel) AckMessage(payloadForNextStep map[string]interface{}) {
@@ -80,16 +85,6 @@ const (
 	 */
 	MAX_OCCURRENCE = 19
 )
-
-type Animal struct {
-	Name string
-}
-
-type ConsumeChannel struct {
-	channel   *amqp.Channel
-	msg       *amqp.Delivery
-	queueName string
-}
 
 // math.MaxInt8
 func (c *ConsumeChannel) NackWithDelay(delay time.Duration, maxRetries int) (int, time.Duration, error) {
