@@ -27,6 +27,10 @@ func microserviceEventValues() []MicroserviceEvent {
 	}
 }
 
+type AllPayloads interface {
+	TestImagePayload | TestMintPayload | SocialBlockChatPayload | SocialNewUserPayload | SocialUnblockChatPayload | PaymentsNotifyClientPayload
+}
+
 type TestImagePayload struct {
 	Image string `json:"image"`
 }

@@ -56,7 +56,7 @@ func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, emitter *Emitter[E
 	}
 
 	// Message parsing (with error handling and type assertion)
-	var eventPayload SocialNewUserPayload
+	var eventPayload map[string]interface{}
 	if err := json.Unmarshal(msg.Body, &eventPayload); err != nil {
 		fmt.Printf("Error parsing message: %s\n", err)
 		channel.Nack(msg.DeliveryTag, false, false) // Nack without requeue

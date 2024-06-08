@@ -5,7 +5,7 @@ import (
 	"github.com/jym272/go_library_test"
 )
 
-func main() {
+func masin() {
 	err := saga.Prepare("amqp://rabbit:1234@localhost:5672")
 	if err != nil {
 		fmt.Println("Error preparing:", err)
@@ -19,10 +19,18 @@ func main() {
 		fmt.Println("Error publishing event:", err)
 		return
 	}
+	err = saga.PublishEvent(saga.SocialBlockChatPayload{
+		UserID:        "11d1",
+		UserToBlockID: "1d2d12d",
+	})
+	if err != nil {
+		fmt.Println("Error publishing event:", err)
+		return
+	}
 
 }
 
-func mai1n() {
+func main() {
 
 	waitChannel := make(chan struct{})
 	eventEmitter, commandEmitter, err := saga.StartTransactional(saga.TransactionalConfig{
@@ -30,15 +38,26 @@ func mai1n() {
 		Microservice: saga.RoomCreator,
 		Events: []saga.MicroserviceEvent{
 			saga.SocialNewUserEvent,
+			saga.SocialBlockChatEvent,
 		},
 	})
 	if err != nil {
 		fmt.Println("Error starting transactional:", err)
 		return
 	}
+	// se puede agregar validación en runtime a aSocialNewUserEvent
 	eventEmitter.On(saga.SocialNewUserEvent, func(handler saga.EventHandler) {
-		payload := handler.Payload.(saga.SocialNewUserPayload)
-		fmt.Println("SocialNewUserEvent received", payload.UserID)
+		eventPayload := saga.ParseEventPayload(handler.Payload, &saga.SocialNewUserPayload{})
+		//var eventPayload1 saga.SocialNewUserPayload
+		//handler.ParseEventPayload(&eventPayload1)
+		//fmt.Println("SocialNewUserEvent received", eventPayload1)
+		fmt.Println("SocialNewUserEvent received", eventPayload)
+		handler.Channel.AckMessage()
+	})
+	eventEmitter.On(saga.SocialBlockChatEvent, func(handler saga.EventHandler) {
+		eventPayload := saga.ParseEventPayload(handler.Payload, &saga.SocialBlockChatPayload{})
+
+		fmt.Println("SocialBlockChatEvent received", eventPayload)
 		handler.Channel.AckMessage()
 	})
 
