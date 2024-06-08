@@ -14,7 +14,7 @@ func getEventKey(event MicroserviceEvent) string {
 
 func getEventObject(event MicroserviceEvent) amqp.Table {
 	key := getEventKey(event)
-	return amqp.Table{key: event}
+	return amqp.Table{key: string(event)}
 }
 
 func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {

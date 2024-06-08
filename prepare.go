@@ -46,7 +46,7 @@ func getConsumeChannel() (*amqp.Channel, error) {
 	return consumeChannel, nil
 }
 
-func prepare(url string) error {
+func Prepare(url string) error {
 	saveURI(url)
 	_, err := getRabbitMQConn()
 	if err != nil {

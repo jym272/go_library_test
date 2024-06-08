@@ -62,7 +62,7 @@ type TransactionalConfig struct {
 }
 
 func StartTransactional(config TransactionalConfig) (*Emitter[EventHandler, MicroserviceEvent], *Emitter[CommandHandler, SagaStepCommand], error) {
-	if err := prepare(config.Url); err != nil {
+	if err := Prepare(config.Url); err != nil {
 		return nil, nil, fmt.Errorf("error preparing transactional: %w", err)
 	}
 
