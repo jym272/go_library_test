@@ -37,7 +37,7 @@ func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
 		return fmt.Errorf("failed to declare queue %s: %w", queueName, err)
 	}
 	_, err = channel.QueueDeclare(requeueQueue, true, false, false, false, amqp.Table{
-		"x-dead-letter-exchange": MatchingExchange,
+		"x-dead-letter-exchange": string(MatchingExchange),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to declare requeue queue %s: %w", requeueQueue, err)
