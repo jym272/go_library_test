@@ -2,12 +2,17 @@ package saga
 
 import "log"
 
-type Command = string
+type SagaStepCommand = string
+
+const (
+	NewUserSetRolesToRoomsCommand SagaStepCommand = "new_user:set_roles_to_rooms"
+)
 
 type CommandValidator struct{}
 
-func (c CommandValidator) Validate(command Command) {
-	validRoomCreatorCommands := []Command{
+// puede ser un interface de validación
+func (c CommandValidator) Validate(command SagaStepCommand) {
+	validRoomCreatorCommands := []SagaStepCommand{
 		"new_user:set_roles_to_rooms",
 	}
 	for _, validCommand := range validRoomCreatorCommands {

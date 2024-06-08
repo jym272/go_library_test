@@ -28,15 +28,25 @@ func ConnectToSagaCommandEmitter(url string, microservice AvailableMicroservices
 	return e, nil
 }
 
-func connectToEvents(url string, microservice AvailableMicroservices, events []MicroserviceEvent) (*Emitter, error) {
-	err := prepare(url)
+type EventsConfig struct {
+	// url is the URL of the RabbitMQ server.
+	url string
+	// microservice is the microservice that will be connecting to the events.
+	microservice AvailableMicroservices
+	// events is the list of events that the microservice will be connecting to.
+	events []MicroserviceEvent
+}
+
+func connectToEvents(conf EventsConfig) (*Emitter, error) {
+
+	err := prepare(conf.url)
 	if err != nil {
 		return nil, err
 	}
-	q := fmt.Sprintf("%s_match_commands", microservice)
+	q := fmt.Sprintf("%s_match_commands", conf.microservice)
 	e := NewEmitter()
 
-	err = createHeaderConsumers(q, events)
+	err = createHeaderConsumers(q, conf.events)
 	if err != nil {
 		return nil, err
 	}
@@ -49,4 +59,15 @@ func connectToEvents(url string, microservice AvailableMicroservices, events []M
 	}()
 
 	return e, nil
+}
+func foo() {
+	e, _ := connectToEvents(EventsConfig{
+		url:          "url",
+		microservice: "microservice",
+		events: []MicroserviceEvent{
+			"event1",
+			"event2",
+		},
+	})
+	e.On("", func(CommandHandler) {})
 }
