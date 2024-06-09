@@ -117,7 +117,7 @@ func (c *ConsumeChannel) publishNackEvent(delay time.Duration) error {
 				Expiration:   fmt.Sprintf("%d", delay.Milliseconds()),
 				Headers:      c.msg.Headers,
 				Body:         c.msg.Body,
-				DeliveryMode: 2, //persistent
+				DeliveryMode: amqp.Persistent,
 			},
 		)
 		if err != nil {
@@ -136,7 +136,7 @@ func (c *ConsumeChannel) publishNackEvent(delay time.Duration) error {
 				Expiration:   fmt.Sprintf("%d", delay.Milliseconds()),
 				Headers:      c.msg.Headers,
 				Body:         c.msg.Body,
-				DeliveryMode: 2, //persistent
+				DeliveryMode: amqp.Persistent,
 			},
 		)
 		if err != nil {

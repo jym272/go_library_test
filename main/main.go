@@ -5,7 +5,7 @@ import (
 	"github.com/jym272/go_library_test"
 )
 
-func masin() {
+func main() {
 	err := saga.Prepare("amqp://rabbit:1234@localhost:5672")
 	if err != nil {
 		fmt.Println("Error preparing:", err)
@@ -28,14 +28,24 @@ func masin() {
 		return
 	}
 
+	//err = saga.CommenceSaga(saga.UpdateUserImagePayload{
+	//	UserId:     "1d2",
+	//	FolderName: "12d",
+	//	BucketName: "12d",
+	//})
+	//if err != nil {
+	//	fmt.Println("Error commencing saga:", err)
+	//	return
+	//}
+
 }
 
-func main() {
+func masdin() {
 
 	waitChannel := make(chan struct{})
 	eventEmitter, commandEmitter, err := saga.StartTransactional(saga.TransactionalConfig{
 		Url:          "amqp://rabbit:1234@localhost:5672",
-		Microservice: saga.RoomCreator,
+		Microservice: saga.Auth,
 		Events: []saga.MicroserviceEvent{
 			saga.SocialNewUserEvent,
 			saga.SocialBlockChatEvent,
@@ -45,12 +55,9 @@ func main() {
 		fmt.Println("Error starting transactional:", err)
 		return
 	}
-	// se puede agregar validación en runtime a aSocialNewUserEvent
 	eventEmitter.On(saga.SocialNewUserEvent, func(handler saga.EventHandler) {
+		// el defer tiene que ser obligatorio!!!!
 		eventPayload := saga.ParseEventPayload(handler.Payload, &saga.SocialNewUserPayload{})
-		//var eventPayload1 saga.SocialNewUserPayload
-		//handler.ParseEventPayload(&eventPayload1)
-		//fmt.Println("SocialNewUserEvent received", eventPayload1)
 		fmt.Println("SocialNewUserEvent received", eventPayload)
 		handler.Channel.AckMessage()
 	})
@@ -64,6 +71,9 @@ func main() {
 	commandEmitter.On(saga.NewUserSetRolesToRoomsCommand, func(handler saga.CommandHandler) {
 		payload := handler.Payload
 		fmt.Println("SocialNewUserEvent received", payload)
+		handler.Channel.AckMessage(map[string]interface{}{
+			"email": "sadfsdf",
+		})
 	})
 
 	fmt.Println("Transactional started")

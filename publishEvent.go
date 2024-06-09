@@ -22,7 +22,6 @@ func PublishEvent(payload PayloadEvent) error {
 	for k, v := range headerEvent {
 		headersArgs[k] = v
 	}
-	fmt.Println("headerEvent", headersArgs)
 
 	err = channel.ExchangeDeclare(string(MatchingExchange), "headers", true, false, false, false, nil)
 	if err != nil {
