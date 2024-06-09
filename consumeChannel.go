@@ -8,61 +8,10 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type (
-	StepHashId string
-	Occurrence int
-)
-
 type ConsumeChannel struct {
 	channel   *amqp.Channel
 	msg       *amqp.Delivery
 	queueName string
-}
-
-type MicroserviceConsumeChannel struct {
-	*ConsumeChannel
-	step SagaStep
-}
-
-type EventsConsumeChannel struct {
-	*ConsumeChannel
-}
-
-func (m *EventsConsumeChannel) AckMessage() {
-	err := m.channel.Ack(m.msg.DeliveryTag, false)
-	if err != nil {
-		fmt.Println("error acknowledging message: %w", err)
-	}
-}
-
-func (m *MicroserviceConsumeChannel) AckMessage(payloadForNextStep map[string]interface{}) {
-	m.step.Status = Success
-	previousPayload := m.step.PreviousPayload
-	metaData := make(map[string]interface{})
-
-	for key, value := range previousPayload {
-		if len(key) > 2 && key[:2] == "__" {
-			metaData[key] = value
-		}
-	}
-
-	for key, value := range payloadForNextStep {
-		metaData[key] = value
-	}
-
-	m.step.Payload = metaData
-
-	err := sendToQueue(ReplyToSagaQ, m.step)
-	if err != nil {
-		// TODO: reenqueue message o manejar mejor el error
-		return
-	}
-
-	err = m.channel.Ack(m.msg.DeliveryTag, false)
-	if err != nil {
-		// TODO: reenqueue message
-		fmt.Println("Error acknowledging message:", err)
-	}
 }
 
 const (

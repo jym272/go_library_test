@@ -8,46 +8,6 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type CommandHandler struct {
-	Channel *MicroserviceConsumeChannel `json:"channel"`
-	Payload map[string]interface{}      `json:"payload"`
-	SagaID  int                         `json:"sagaId"`
-}
-
-func microserviceConsumeCallback(msg *amqp.Delivery, channel *amqp.Channel, e *Emitter[CommandHandler, StepCommand], queueName string) {
-	if msg == nil {
-		fmt.Println("NO MSG AVAILABLE")
-		return
-	}
-
-	var currentStep SagaStep
-	err := json.Unmarshal(msg.Body, &currentStep)
-	if err != nil {
-		fmt.Println("ERROR PARSING MSG", err)
-		err = channel.Nack(msg.DeliveryTag, false, false)
-		if err != nil {
-			fmt.Println("Error negatively acknowledging message:", err)
-			return
-		}
-		return
-	}
-
-	responseChannel := &MicroserviceConsumeChannel{
-		step: currentStep,
-		ConsumeChannel: &ConsumeChannel{
-			channel:   channel,
-			msg:       msg,
-			queueName: queueName,
-		},
-	}
-
-	e.Emit(currentStep.Command, CommandHandler{
-		Channel: responseChannel,
-		Payload: currentStep.PreviousPayload,
-		SagaID:  currentStep.SagaID,
-	})
-}
-
 type EventHandler struct {
 	Channel *EventsConsumeChannel  `json:"channel"`
 	Payload map[string]interface{} `json:"payload"`
@@ -64,7 +24,7 @@ func ParseEventPayload[T any](handlerPayload map[string]interface{}, data *T) *T
 	return data
 }
 
-// ParseEventPayload It also works, but you need to pass a reference to the variable
+// ParseEventPayload (this) It also works, but you need to pass a reference to the variable
 // and is not type safe to assure that, as the type is: any
 // Works:
 // var eventPayload1 saga.SocialNewUserPayload   // or a pointer *saga.SocialNewUserPayload
@@ -146,31 +106,4 @@ func findEventValues(headers amqp.Table) ([]MicroserviceEvent, error) {
 		return nil, fmt.Errorf("no valid event key found")
 	}
 	return eventValues, nil
-}
-
-// consume consumes messages from the queue and processes them.
-func consume[T any, U comparable](e *Emitter[T, U], queueName string, cb func(*amqp.Delivery, *amqp.Channel, *Emitter[T, U], string)) error {
-	channel, err := getConsumeChannel()
-	if err != nil {
-		return err
-	}
-
-	channelQ, err := channel.Consume(
-		queueName,
-		"",
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-
-	for msg := range channelQ {
-		cb(&msg, channel, e, queueName)
-	}
-
-	return nil
 }

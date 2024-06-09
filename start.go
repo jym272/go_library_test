@@ -2,7 +2,35 @@ package saga
 
 import (
 	"fmt"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+// consume consumes messages from the queue and processes them.
+func consume[T any, U comparable](e *Emitter[T, U], queueName string, cb func(*amqp.Delivery, *amqp.Channel, *Emitter[T, U], string)) error {
+	channel, err := getConsumeChannel()
+	if err != nil {
+		return err
+	}
+
+	channelQ, err := channel.Consume(
+		queueName,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	for msg := range channelQ {
+		cb(&msg, channel, e, queueName)
+	}
+
+	return nil
+}
 
 type commandEmitterConf struct {
 	// microservice is the microservice that will be connecting to the events.
@@ -30,7 +58,7 @@ func connectToSagaCommandEmitter(conf commandEmitterConf) (*Emitter[CommandHandl
 	}
 
 	go func() {
-		err := consume(e, q.QueueName, microserviceConsumeCallback)
+		err = consume(e, q.QueueName, sagaCommandCallback)
 		if err != nil {
 			fmt.Println("Error consuming messages:", err)
 		}
