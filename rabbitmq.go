@@ -14,7 +14,7 @@ type CommandHandler struct {
 	SagaID  int                         `json:"sagaId"`
 }
 
-func microserviceConsumeCallback(msg *amqp.Delivery, channel *amqp.Channel, e *Emitter[CommandHandler, SagaStepCommand], queueName string) {
+func microserviceConsumeCallback(msg *amqp.Delivery, channel *amqp.Channel, e *Emitter[CommandHandler, StepCommand], queueName string) {
 	if msg == nil {
 		fmt.Println("NO MSG AVAILABLE")
 		return
@@ -24,7 +24,7 @@ func microserviceConsumeCallback(msg *amqp.Delivery, channel *amqp.Channel, e *E
 	err := json.Unmarshal(msg.Body, &currentStep)
 	if err != nil {
 		fmt.Println("ERROR PARSING MSG", err)
-		err := channel.Nack(msg.DeliveryTag, false, false)
+		err = channel.Nack(msg.DeliveryTag, false, false)
 		if err != nil {
 			fmt.Println("Error negatively acknowledging message:", err)
 			return
@@ -48,6 +48,41 @@ func microserviceConsumeCallback(msg *amqp.Delivery, channel *amqp.Channel, e *E
 	})
 }
 
+type EventHandler struct {
+	Channel *EventsConsumeChannel  `json:"channel"`
+	Payload map[string]interface{} `json:"payload"`
+}
+
+func ParseEventPayload[T any](handlerPayload map[string]interface{}, data *T) *T {
+	body, err := json.Marshal(handlerPayload)
+	if err != nil {
+		panic(err)
+	}
+	if err = json.Unmarshal(body, &data); err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// ParseEventPayload It also works, but you need to pass a reference to the variable
+// and is not type safe to assure that, as the type is: any
+// Works:
+// var eventPayload1 saga.SocialNewUserPayload   // or a pointer *saga.SocialNewUserPayload
+// ------------------------->key, pass the reference<-----------------//
+// handler.ParseEventPayload(&eventPayload1)
+//
+// It does not work:
+// handler.ParseEventPayload(eventPayload1)
+func (e *EventHandler) ParseEventPayload(data any) {
+	body, err := json.Marshal(e.Payload)
+	if err != nil {
+		panic(err)
+	}
+	if err = json.Unmarshal(body, &data); err != nil {
+		panic(err)
+	}
+}
+
 // eventCallback handles the consumption and processing of microservice events.
 func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, emitter *Emitter[EventHandler, MicroserviceEvent], queueName string) {
 	if msg == nil {
@@ -55,19 +90,25 @@ func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, emitter *Emitter[E
 		return
 	}
 
-	// Message parsing (with error handling and type assertion)
 	var eventPayload map[string]interface{}
 	if err := json.Unmarshal(msg.Body, &eventPayload); err != nil {
 		fmt.Printf("Error parsing message: %s\n", err)
-		channel.Nack(msg.DeliveryTag, false, false) // Nack without requeue
+		err = channel.Nack(msg.DeliveryTag, false, false)
+		if err != nil {
+			fmt.Println("Error negatively acknowledging message:", err)
+			return
+		}
 		return
 	}
 
-	// Extract the event key from headers
 	eventKey, err := findEventValues(msg.Headers)
 	if err != nil {
 		fmt.Println("Invalid header value: no valid event key found")
-		channel.Nack(msg.DeliveryTag, false, false)
+		err = channel.Nack(msg.DeliveryTag, false, false)
+		if err != nil {
+			fmt.Println("Error negatively acknowledging message:", err)
+			return
+		}
 		return
 	}
 	if len(eventKey) != 1 {
@@ -83,15 +124,13 @@ func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, emitter *Emitter[E
 		},
 	}
 
-	// Emit the event with the typed payload and response channel
-	fmt.Println("Event key", eventKey)
 	emitter.Emit(eventKey[0], EventHandler{
 		Payload: eventPayload,
 		Channel: responseChannel,
 	})
 }
 
-// findEventValues find all the values MicroserviceEvent values in the headers.
+// findEventValues find all the MicroserviceEvent values in the headers.
 func findEventValues(headers amqp.Table) ([]MicroserviceEvent, error) {
 	var eventValues []MicroserviceEvent
 	for _, value := range headers {
@@ -108,6 +147,8 @@ func findEventValues(headers amqp.Table) ([]MicroserviceEvent, error) {
 	}
 	return eventValues, nil
 }
+
+// consume consumes messages from the queue and processes them.
 func consume[T any, U comparable](e *Emitter[T, U], queueName string, cb func(*amqp.Delivery, *amqp.Channel, *Emitter[T, U], string)) error {
 	channel, err := getConsumeChannel()
 	if err != nil {

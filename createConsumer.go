@@ -6,6 +6,11 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+type QueueConsumerProps struct {
+	QueueName string
+	Exchange  Exchange
+}
+
 // https://blog.rabbitmq.com/posts/2012/04/rabbitmq-performance-measurements-part-2/
 func createConsumers(consumers []QueueConsumerProps) error {
 	channel, err := getConsumeChannel()

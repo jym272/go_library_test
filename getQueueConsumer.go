@@ -1,7 +1,5 @@
 package saga
 
-import "fmt"
-
 type AvailableMicroservices string
 
 const (
@@ -24,19 +22,3 @@ const (
 const (
 	ReplyToSagaQ Queue = "reply_to_saga"
 )
-
-type QueueConsumerProps struct {
-	QueueName string
-	Exchange  Exchange
-}
-
-func getQueueName(microservice AvailableMicroservices) string {
-	return fmt.Sprintf("%s_saga_commands", microservice)
-}
-
-func getQueueConsumer(microservice AvailableMicroservices) QueueConsumerProps {
-	return QueueConsumerProps{
-		QueueName: getQueueName(microservice),
-		Exchange:  CommandsExchange,
-	}
-}

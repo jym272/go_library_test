@@ -17,7 +17,8 @@ func getEventObject(event MicroserviceEvent) amqp.Table {
 	return amqp.Table{key: string(event)}
 }
 
-func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
+// createHeaderConsumer creates the exchanges, queues, and bindings for the given microservice and events.
+func createHeaderConsumer(queueName string, events []MicroserviceEvent) error {
 	channel, err := getConsumeChannel()
 	if err != nil {
 		return fmt.Errorf("failed to get consume channel: %w", err)
@@ -136,14 +137,4 @@ func createHeaderConsumers(queueName string, events []MicroserviceEvent) error {
 		return fmt.Errorf("failed to set QoS: %w", err)
 	}
 	return nil
-}
-
-func containsEvent(events []MicroserviceEvent, ev MicroserviceEvent) bool {
-	for _, e := range events {
-		if e == ev {
-			return true
-		}
-	}
-	return false
-
 }

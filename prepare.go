@@ -60,6 +60,8 @@ func Prepare(url string) error {
 	return nil
 }
 
+// HealthCheck checks if the rabbitmq connection is alive and the queue exists.
+// the queue to check is the microservice related to the saga commands
 func HealthCheck(microservice AvailableMicroservices) error {
 	if !isConnected {
 		return fmt.Errorf("rabbitmq is not connected")
