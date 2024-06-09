@@ -113,13 +113,13 @@ func StartTransactional(config TransactionalConfig) (*Emitter[EventHandler, Micr
 		return nil, nil, fmt.Errorf("error connecting to events: %w", err)
 	}
 
-	commandEmitter, err := connectToSagaCommandEmitter(commandEmitterConf{
-		microservice: config.Microservice,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("error connecting to command emitter: %w", err)
+	//commandEmitter, err := connectToSagaCommandEmitter(commandEmitterConf{
+	//	microservice: config.Microservice,
+	//})
+	//if err != nil {
+	//	return nil, nil, fmt.Errorf("error connecting to command emitter: %w", err)
+	//
+	//}
 
-	}
-
-	return eventEmitter, commandEmitter, nil
+	return eventEmitter, nil, nil
 }

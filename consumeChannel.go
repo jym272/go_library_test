@@ -36,15 +36,15 @@ const (
 )
 
 // math.MaxInt8
-func (c *ConsumeChannel) NackWithDelay(delay time.Duration, maxRetries int) (int, time.Duration, error) {
+func (c *ConsumeChannel) NackWithDelay(delay time.Duration, maxRetries int32) (int32, time.Duration, error) {
 	err := c.channel.Nack(c.msg.DeliveryTag, false, false)
 	if err != nil {
 		return 0, 0, fmt.Errorf("error nacking message: %w", err)
 	}
 
-	count := 0
+	var count int32
 	if retryCount, ok := c.msg.Headers["x-retry-count"]; ok {
-		count = retryCount.(int)
+		count = retryCount.(int32)
 	}
 	count++
 
