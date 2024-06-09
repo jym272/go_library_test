@@ -2,8 +2,6 @@ package saga
 
 import (
 	"fmt"
-	"github.com/jym272/go_library_test/micro"
-
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -78,11 +76,18 @@ func (t *Transactional) prepare() {
 	notifyClose()
 }
 
+// healthCheckQueue is the queue to check if the rabbitmq connection is alive.
+// This queue is set in the creation of resources, consumers, queues, and exchanges
+var healthCheckQueue string
+
 // HealthCheck checks if the rabbitmq connection is alive and the queue exists.
-// the queue to check is the microservice related to the saga commands
-func HealthCheck(microservice micro.AvailableMicroservices) error {
+// The queue to check is the microservice related to the saga commands or events.
+func HealthCheck() error {
 	if !isConnected {
 		return fmt.Errorf("rabbitmq is not connected")
+	}
+	if healthCheckQueue == "" {
+		return fmt.Errorf("health check queue is not set")
 	}
 	channel, err := rabbitMQConn.Channel()
 	defer func(channel *amqp.Channel) {
@@ -98,7 +103,7 @@ func HealthCheck(microservice micro.AvailableMicroservices) error {
 		return err
 
 	}
-	_, err = channel.QueueDeclarePassive(getQueueName(microservice), true, false, false, false, nil)
+	_, err = channel.QueueDeclarePassive(healthCheckQueue, true, false, false, false, nil)
 	if err != nil {
 		fmt.Println("queue error")
 		return err

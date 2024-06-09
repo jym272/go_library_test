@@ -127,5 +127,6 @@ func createHeaderConsumer(queueName string, events []event.MicroserviceEvent) er
 			}
 		}
 	}
+	healthCheckQueue = queueName
 	return nil
 }

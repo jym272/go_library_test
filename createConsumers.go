@@ -52,6 +52,8 @@ func createConsumers(consumers []QueueConsumerProps) error {
 		if err != nil {
 			return err
 		}
+
+		healthCheckQueue = queueName
 	}
 	return nil
 }
