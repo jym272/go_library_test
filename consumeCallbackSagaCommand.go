@@ -3,6 +3,7 @@ package saga
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jym272/go_library_test/micro"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -12,7 +13,7 @@ type CommandHandler struct {
 	SagaID  int                         `json:"sagaId"`
 }
 
-func sagaCommandCallback(msg *amqp.Delivery, channel *amqp.Channel, e *Emitter[CommandHandler, StepCommand], queueName string) {
+func sagaCommandCallback(msg *amqp.Delivery, channel *amqp.Channel, e *Emitter[CommandHandler, micro.StepCommand], queueName string) {
 	if msg == nil {
 		fmt.Println("NO MSG AVAILABLE")
 		return

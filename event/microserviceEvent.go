@@ -1,4 +1,4 @@
-package saga
+package event
 
 type MicroserviceEvent string
 
@@ -16,7 +16,7 @@ const (
 	SocialUnblockChatEvent    MicroserviceEvent = "social.unblock_chat"
 )
 
-func microserviceEventValues() []MicroserviceEvent {
+func MicroserviceEventValues() []MicroserviceEvent {
 	return []MicroserviceEvent{
 		TestImageEvent,
 		TestMintEvent,

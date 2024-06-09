@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/jym272/go_library_test/event"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"time"
 )
 
-func PublishEvent(payload PayloadEvent) error {
-
+func PublishEvent(payload event.PayloadEvent) error {
 	channel, err := getSendChannel()
 	if err != nil {
 		return fmt.Errorf("error getting send channel: %w", err)

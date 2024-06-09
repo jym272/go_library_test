@@ -2,6 +2,8 @@ package saga
 
 import (
 	"fmt"
+	"github.com/jym272/go_library_test/event"
+	"github.com/jym272/go_library_test/micro"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -9,7 +11,18 @@ import (
 func consume[T any, U comparable](e *Emitter[T, U], queueName string, cb func(*amqp.Delivery, *amqp.Channel, *Emitter[T, U], string)) error {
 	channel, err := getConsumeChannel()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get channel: %w", err)
+	}
+
+	// TODO: is the same channel as the createConsumers channel, if for some reason the prefetch count is changed in one place, it will be changed in the other
+	// TODO: solution, create a new channel
+	err = channel.Qos(
+		1,     // prefetch count
+		0,     // prefetch size
+		false, // global
+	)
+	if err != nil {
+		return fmt.Errorf("failed to set QoS: %w", err)
 	}
 
 	channelQ, err := channel.Consume(
@@ -22,7 +35,7 @@ func consume[T any, U comparable](e *Emitter[T, U], queueName string, cb func(*a
 		nil,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to consume: %w", err)
 	}
 
 	for msg := range channelQ {
@@ -32,29 +45,32 @@ func consume[T any, U comparable](e *Emitter[T, U], queueName string, cb func(*a
 	return nil
 }
 
-type commandEmitterConf struct {
-	// microservice is the microservice that will be connecting to the events.
-	microservice AvailableMicroservices
-}
-
-func getQueueName(microservice AvailableMicroservices) string {
+func getQueueName(microservice micro.AvailableMicroservices) string {
 	return fmt.Sprintf("%s_saga_commands", microservice)
 }
 
-func getQueueConsumer(microservice AvailableMicroservices) QueueConsumerProps {
+func getQueueConsumer(microservice micro.AvailableMicroservices) QueueConsumerProps {
 	return QueueConsumerProps{
 		QueueName: getQueueName(microservice),
 		Exchange:  CommandsExchange,
 	}
 }
 
-func connectToSagaCommandEmitter(conf commandEmitterConf) (*Emitter[CommandHandler, StepCommand], error) {
-	q := getQueueConsumer(conf.microservice)
-	e := newEmitter[CommandHandler, StepCommand]()
+type Transactional struct {
+	RabbitUri    string
+	Microservice micro.AvailableMicroservices
+	Events       []event.MicroserviceEvent
+	isReady      bool
+}
+
+func (t *Transactional) ConnectToSagaCommandEmitter() *Emitter[CommandHandler, micro.StepCommand] {
+	t.prepare()
+	q := getQueueConsumer(t.Microservice)
+	e := newEmitter[CommandHandler, micro.StepCommand]()
 
 	err := createConsumers([]QueueConsumerProps{q})
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	go func() {
@@ -64,24 +80,17 @@ func connectToSagaCommandEmitter(conf commandEmitterConf) (*Emitter[CommandHandl
 		}
 	}()
 
-	return e, nil
+	return e
 }
 
-type eventsConf struct {
-	// microservice is the microservice that will be connecting to the events.
-	microservice AvailableMicroservices
-	// events is the list of events that the microservice will be connecting to.
-	events []MicroserviceEvent
-}
+func (t *Transactional) ConnectToEvents() *Emitter[EventHandler, event.MicroserviceEvent] {
+	t.prepare()
+	queueName := fmt.Sprintf("%s_match_commands", t.Microservice)
+	e := newEmitter[EventHandler, event.MicroserviceEvent]()
 
-func connectToEvents(conf eventsConf) (*Emitter[EventHandler, MicroserviceEvent], error) {
-
-	queueName := fmt.Sprintf("%s_match_commands", conf.microservice)
-	e := newEmitter[EventHandler, MicroserviceEvent]()
-
-	err := createHeaderConsumer(queueName, conf.events)
+	err := createHeaderConsumer(queueName, t.Events)
 	if err != nil {
-		return nil, fmt.Errorf("error creating header consumers: %w", err)
+		panic(err)
 	}
 
 	go func() {
@@ -91,35 +100,5 @@ func connectToEvents(conf eventsConf) (*Emitter[EventHandler, MicroserviceEvent]
 		}
 	}()
 
-	return e, nil
-}
-
-type TransactionalConfig struct {
-	Url          string
-	Microservice AvailableMicroservices
-	Events       []MicroserviceEvent
-}
-
-func StartTransactional(config TransactionalConfig) (*Emitter[EventHandler, MicroserviceEvent], *Emitter[CommandHandler, StepCommand], error) {
-	if err := Prepare(config.Url); err != nil {
-		return nil, nil, fmt.Errorf("error preparing transactional: %w", err)
-	}
-
-	eventEmitter, err := connectToEvents(eventsConf{
-		microservice: config.Microservice,
-		events:       config.Events,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("error connecting to events: %w", err)
-	}
-
-	//commandEmitter, err := connectToSagaCommandEmitter(commandEmitterConf{
-	//	microservice: config.Microservice,
-	//})
-	//if err != nil {
-	//	return nil, nil, fmt.Errorf("error connecting to command emitter: %w", err)
-	//
-	//}
-
-	return eventEmitter, nil, nil
+	return e
 }

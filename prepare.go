@@ -2,6 +2,7 @@ package saga
 
 import (
 	"fmt"
+	"github.com/jym272/go_library_test/micro"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -46,23 +47,40 @@ func getConsumeChannel() (*amqp.Channel, error) {
 	return consumeChannel, nil
 }
 
-func Prepare(url string) error {
-	saveURI(url)
+// Useful to prepare the connection in publish events
+//func Prepare(url string) {
+//	saveURI(url)
+//	_, err := getRabbitMQConn()
+//	if err != nil {
+//		panic(err)
+//	}
+//	_, err = getConsumeChannel()
+//	if err != nil {
+//		panic(err)
+//	}
+//	notifyClose()
+//}
+
+func (t *Transactional) prepare() {
+	if t.isReady {
+		return
+	}
+	saveURI(t.RabbitUri)
 	_, err := getRabbitMQConn()
 	if err != nil {
-		return err
+		panic(err)
 	}
 	_, err = getConsumeChannel()
 	if err != nil {
-		return err
+		panic(err)
 	}
+	t.isReady = true
 	notifyClose()
-	return nil
 }
 
 // HealthCheck checks if the rabbitmq connection is alive and the queue exists.
 // the queue to check is the microservice related to the saga commands
-func HealthCheck(microservice AvailableMicroservices) error {
+func HealthCheck(microservice micro.AvailableMicroservices) error {
 	if !isConnected {
 		return fmt.Errorf("rabbitmq is not connected")
 	}

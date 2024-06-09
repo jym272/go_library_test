@@ -3,6 +3,7 @@ package saga
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jym272/go_library_test/event"
 	"slices"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -44,7 +45,7 @@ func (e *EventHandler) ParseEventPayload(data any) {
 }
 
 // eventCallback handles the consumption and processing of microservice events.
-func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, emitter *Emitter[EventHandler, MicroserviceEvent], queueName string) {
+func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, emitter *Emitter[EventHandler, event.MicroserviceEvent], queueName string) {
 	if msg == nil {
 		fmt.Println("Message not available")
 		return
@@ -91,14 +92,14 @@ func eventCallback(msg *amqp.Delivery, channel *amqp.Channel, emitter *Emitter[E
 }
 
 // findEventValues find all the MicroserviceEvent values in the headers.
-func findEventValues(headers amqp.Table) ([]MicroserviceEvent, error) {
-	var eventValues []MicroserviceEvent
+func findEventValues(headers amqp.Table) ([]event.MicroserviceEvent, error) {
+	var eventValues []event.MicroserviceEvent
 	for _, value := range headers {
 		if _, ok := value.(string); !ok {
 			continue
 		}
-		val := MicroserviceEvent(value.(string))
-		if slices.Contains(microserviceEventValues(), val) {
+		val := event.MicroserviceEvent(value.(string))
+		if slices.Contains(event.MicroserviceEventValues(), val) {
 			eventValues = append(eventValues, val)
 		}
 	}

@@ -2,23 +2,24 @@ package saga
 
 import (
 	"fmt"
+	"github.com/jym272/go_library_test/event"
 	"slices"
 	"strings"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func getEventKey(event MicroserviceEvent) string {
+func getEventKey(event event.MicroserviceEvent) string {
 	return strings.ToUpper(string(event))
 }
 
-func getEventObject(event MicroserviceEvent) amqp.Table {
+func getEventObject(event event.MicroserviceEvent) amqp.Table {
 	key := getEventKey(event)
 	return amqp.Table{key: string(event)}
 }
 
 // createHeaderConsumer creates the exchanges, queues, and bindings for the given microservice and events.
-func createHeaderConsumer(queueName string, events []MicroserviceEvent) error {
+func createHeaderConsumer(queueName string, events []event.MicroserviceEvent) error {
 	channel, err := getConsumeChannel()
 	if err != nil {
 		return fmt.Errorf("failed to get consume channel: %w", err)
@@ -45,7 +46,7 @@ func createHeaderConsumer(queueName string, events []MicroserviceEvent) error {
 	}
 
 	// Handle individual events
-	for _, ev := range microserviceEventValues() {
+	for _, ev := range event.MicroserviceEventValues() {
 		headerEvent := getEventObject(ev)
 
 		// Declare and bind event-specific exchanges
@@ -125,16 +126,6 @@ func createHeaderConsumer(queueName string, events []MicroserviceEvent) error {
 				return fmt.Errorf("failed to delete exchange %s_%s: %w", ev, queueName, err)
 			}
 		}
-	}
-	// TODO: is the same channel as the createConsumers channel, if for some reason the prefetch count is changed in one place, it will be changed in the other
-	// TODO: solution, create a new channel
-	err = channel.Qos(
-		1,     // prefetch count
-		0,     // prefetch size
-		false, // global
-	)
-	if err != nil {
-		return fmt.Errorf("failed to set QoS: %w", err)
 	}
 	return nil
 }

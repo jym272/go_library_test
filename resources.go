@@ -1,12 +1,5 @@
 package saga
 
-type AvailableMicroservices string
-
-const (
-	Auth        AvailableMicroservices = "auth"
-	RoomCreator AvailableMicroservices = "room-creator"
-)
-
 type (
 	Exchange string
 	Queue    string
