@@ -12,6 +12,7 @@ const (
 
 	PaymentsCancelPrePurchaseReservationEvent MicroserviceEvent = "payments.cancel_pre_purchase_reservation"
 	PaymentsNotifyClientEvent                 MicroserviceEvent = "payments.notify_client"
+	RoomSnapshotFirstSnapshotEvent            MicroserviceEvent = "room_snapshot.first_snapshot"
 	SocialBlockChatEvent                      MicroserviceEvent = "social.block_chat"
 	SocialNewUserEvent                        MicroserviceEvent = "social.new_user"
 	SocialUnblockChatEvent                    MicroserviceEvent = "social.unblock_chat"
@@ -67,6 +68,15 @@ type PaymentsNotifyClientPayload struct {
 
 func (PaymentsNotifyClientPayload) Type() MicroserviceEvent {
 	return PaymentsNotifyClientEvent
+}
+
+// RoomSnapshotFirstSnapshotPayload is the payload for the social.block_chat event.
+type RoomSnapshotFirstSnapshotPayload struct {
+	Slug string `json:"slug"`
+}
+
+func (RoomSnapshotFirstSnapshotPayload) Type() MicroserviceEvent {
+	return RoomSnapshotFirstSnapshotEvent
 }
 
 // SocialBlockChatPayload is the payload for the social.block_chat event.
