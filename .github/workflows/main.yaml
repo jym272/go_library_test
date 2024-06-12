@@ -1,0 +1,25 @@
+name: New library version
+on:
+  push:
+    branches:
+      - main
+defaults:
+  run:
+    shell: bash
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  FORCE_COLOR: 3
+
+jobs:
+  generate_tag:
+    timeout-minutes: 2
+    if: github.event.repository.full_name == github.repository
+    name: Generate a new patch version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate tag
+        run:
+          bash ./scripts/generate-tag.sh
