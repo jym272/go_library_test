@@ -2,8 +2,11 @@ name: release
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - "*"
+    # only patch versions
+      - 'v0.1.*'
 
 permissions:
   contents: write
