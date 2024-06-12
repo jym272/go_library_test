@@ -18,7 +18,7 @@ env:
 jobs:
   generate_tag:
     timeout-minutes: 2
-    if: github.event.repository.full_name == github.repository
+    if: github.event.repository.full_name == github.repository && github.event.pull_request.merged == true
     name: Generate a new patch version
     runs-on: ubuntu-latest
     steps:
