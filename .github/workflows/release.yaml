@@ -1,26 +1,51 @@
-name: release
-
+name: New library version
 on:
-  push:
-    tags:
-    # only patch versions
-      - 'v0.1.*'
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+#  push:
+#    branches:
+#      - main
+#    tags-ignore:
+#      - '*'
 
-permissions:
-  contents: write
-  # packages: write
-  # issues: write
-
-
-env:
-  FORCE_COLOR: 3
-  GO_VERSION: 1.22
 defaults:
   run:
     shell: bash
 
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  FORCE_COLOR: 3
+
 jobs:
+  generate_tag:
+    timeout-minutes: 1
+    if: github.event.repository.full_name == github.repository && github.event.pull_request.merged
+    name: Generate a new patch version
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure Git Credentials
+        run: |
+          git config --global user.email "robotito@legendaryum.com"
+          git config --global user.name "botito"
+      - name: Generate tag
+        run:
+          bash ./scripts/generate-tag.sh
   goreleaser:
+    timeout-minutes: 1
+    name: Release new version
+    permissions:
+      contents: write
+    needs:
+      - generate_tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
