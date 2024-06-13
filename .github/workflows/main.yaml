@@ -18,13 +18,18 @@ env:
 jobs:
   generate_tag:
     timeout-minutes: 2
-    if: github.event.repository.full_name == github.repository && github.event.pull_request.merged == true
+    #  && github.event.pull_request.merged == true
+    if: github.event.repository.full_name == github.repository
     name: Generate a new patch version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Configure Git Credentials
+        run: |
+          git config --global user.email "robotito@legendaryum.com"
+          git config --global user.name "botito"
       - name: Generate tag
         run:
           bash ./scripts/generate-tag.sh
