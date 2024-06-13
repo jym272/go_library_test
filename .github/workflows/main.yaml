@@ -19,7 +19,8 @@ jobs:
   generate_tag:
     timeout-minutes: 1
     #  && github.event.pull_request.merged == true
-    if: github.event.repository.full_name == github.repository
+    if: github.event.pull_request.merged
+    # if: github.event.repository.full_name == github.repository
     name: Generate a new patch version
     permissions:
       contents: write
