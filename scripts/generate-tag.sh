@@ -3,8 +3,8 @@
 set -eou pipefail
 
 # Set Git Configuration (Replace with your bot's info)
-git config --global user.email "your-bot-email@example.com"
-git config --global user.name "Your Bot Name"
+#git config --global user.email "your-bot-email@example.com"
+#git config --global user.name "Your Bot Name"
 
 last_tag=$(git describe --tags --abbrev=0)
 
