@@ -36,8 +36,10 @@ jobs:
         run:
           bash ./scripts/generate-tag.sh
   goreleaser:
-    name: Release new version
     timeout-minutes: 1
+    name: Release new version
+    permissions:
+      contents: write
     needs:
       - generate_tag
     runs-on: ubuntu-latest
