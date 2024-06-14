@@ -6,8 +6,6 @@ type AvailableMicroservices string
 
 const (
 	Auth           AvailableMicroservices = "auth"
-	RoomCreator    AvailableMicroservices = "room-creator"
-	Showcase       AvailableMicroservices = "legend-showcase"
 	RapidMessaging AvailableMicroservices = "rapid-messaging"
 )
 
@@ -26,21 +24,29 @@ const (
 
 // payments
 const (
-	Payments                               AvailableMicroservices = "payments"
-	ResourcePurchasedDeductCoinsCommand    StepCommand            = "resource_purchased:deduct_coins"
-	ResourcePurchasedRemoveRedisKeyCommand StepCommand            = "resource_purchased:remove_redis_key"
+	Payments                            AvailableMicroservices = "payments"
+	ResourcePurchasedDeductCoinsCommand StepCommand            = "resource_purchased:deduct_coins"
 )
 
 // room-inventory
 const (
-	RoomInventory                    AvailableMicroservices = "room-inventory"
-	DecreaseAvailableQuantityCommand StepCommand            = "resource_purchased:decrease_available_quantity"
+	RoomInventory                AvailableMicroservices = "room-inventory"
+	SavePurchasedResourceCommand StepCommand            = "resource_purchased:save_purchased_resource"
 )
 
 // room-snapshot
 const (
-	RoomSnapshot            AvailableMicroservices = "room-snapshot"
-	PurchaseResourceCommand StepCommand            = "resource_purchased:save_purchased_resource"
+	RoomSnapshot AvailableMicroservices = "room-snapshot"
+)
+
+// room-creator
+const (
+	RoomCreator AvailableMicroservices = "room-creator"
+)
+
+// legend-showcase
+const (
+	Showcase AvailableMicroservices = "legend-showcase"
 )
 
 // social

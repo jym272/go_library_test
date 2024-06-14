@@ -10,12 +10,11 @@ const (
 	TestImageEvent MicroserviceEvent = "test.image"
 	TestMintEvent  MicroserviceEvent = "test.mint"
 
-	PaymentsCancelPrePurchaseReservationEvent MicroserviceEvent = "payments.cancel_pre_purchase_reservation"
-	PaymentsNotifyClientEvent                 MicroserviceEvent = "payments.notify_client"
-	RoomSnapshotFirstSnapshotEvent            MicroserviceEvent = "room_snapshot.first_snapshot"
-	SocialBlockChatEvent                      MicroserviceEvent = "social.block_chat"
-	SocialNewUserEvent                        MicroserviceEvent = "social.new_user"
-	SocialUnblockChatEvent                    MicroserviceEvent = "social.unblock_chat"
+	PaymentsNotifyClientEvent      MicroserviceEvent = "payments.notify_client"
+	RoomSnapshotFirstSnapshotEvent MicroserviceEvent = "room_snapshot.first_snapshot"
+	SocialBlockChatEvent           MicroserviceEvent = "social.block_chat"
+	SocialNewUserEvent             MicroserviceEvent = "social.new_user"
+	SocialUnblockChatEvent         MicroserviceEvent = "social.unblock_chat"
 )
 
 func MicroserviceEventValues() []MicroserviceEvent {
@@ -23,8 +22,8 @@ func MicroserviceEventValues() []MicroserviceEvent {
 		TestImageEvent,
 		TestMintEvent,
 
-		PaymentsCancelPrePurchaseReservationEvent,
 		PaymentsNotifyClientEvent,
+		RoomSnapshotFirstSnapshotEvent,
 		SocialBlockChatEvent,
 		SocialNewUserEvent,
 		SocialUnblockChatEvent,
@@ -47,17 +46,6 @@ type TestMintPayload struct {
 
 func (TestMintPayload) Type() MicroserviceEvent {
 	return TestMintEvent
-}
-
-// PaymentsCancelPrePurchaseReservationPayload is the payload for the payments.cancel_pre_purchase_reservation event.
-type PaymentsCancelPrePurchaseReservationPayload struct {
-	UserId           string `json:"userId"`
-	ResourceId       string `json:"resourceId"`
-	ReservedQuantity int32  `json:"reservedQuantity"`
-}
-
-func (PaymentsCancelPrePurchaseReservationPayload) Type() MicroserviceEvent {
-	return PaymentsCancelPrePurchaseReservationEvent
 }
 
 // PaymentsNotifyClientPayload is the payload for the payments.notify_client event.
